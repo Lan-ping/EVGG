@@ -13,6 +13,9 @@ import random
 import shutil
 from network.enhanced_vgg import EVGG
 
+import keras.applications.vgg16 as vgg16
+import keras.applications.inception_v3 as inception_v3
+
 def precessFunc(img):
     img =tensorflow.keras.applications.vgg16.preprocess_input(img)
     return img
@@ -63,7 +66,7 @@ if __name__ == '__main__':
 
     regl1 = 0.000
     regl2 = 0.001
-    basemodel = EVGG(input_shape=(256, 256, 3))
+    basemodel = EVGG(input_shape=(256, 256, 3),use_se=True)
     x = basemodel.output
     x = Flatten()(x)
     x = Dense(1024, activation='relu', kernel_regularizer=tensorflow.keras.regularizers.l1_l2(regl1, regl2))(x)
@@ -77,10 +80,11 @@ if __name__ == '__main__':
         optimizer=optimizers.Adam(1e-4),
         metrics=['accuracy']
     )
-    tensorboard = tensorflow.keras.callbacks.TensorBoard(log_dir='./recordVgg')
-    checkpoint = tensorflow.keras.callbacks.ModelCheckpoint(filepath='./recordVgg/bestModel.hdf5', save_best_only=True,
-                                                 save_weights_only=True)
-    data = trainGenerator.__next__()
+    model.summary()
+    tensorboard = tensorflow.keras.callbacks.TensorBoard(log_dir='recordVgg/')
+    checkpoint = tensorflow.keras.callbacks.ModelCheckpoint(filepath='recordVgg/bestModel.h5', save_best_only=True,
+                                                 save_weights_only=True, monitor='val_accuracy', mode='max', verbose=1)
+    # data = trainGenerator.__next__()
     # p = model.predict(data[0])
     history=model.fit_generator(
         generator=trainGenerator,
@@ -88,7 +92,7 @@ if __name__ == '__main__':
         epochs=200,
         validation_data=valGenerator,
         validation_steps=100,
-        callbacks=[tensorboard, checkpoint]
+        callbacks=[tensorboard, checkpoint]#, checkpoint
     )
 
     plt.plot(history.history['accuracy'])

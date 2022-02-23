@@ -1,2 +1,4 @@
 tensorflow-gpu
+matplotlib
+opencv-python
 imgaug
